@@ -45,6 +45,11 @@ import tempfile
 
 BOARD = "apple,j714s"
 DEVICE_CLASS = "j714sap"
+# --board selects one of these; each is a developer-only single-board build.
+# apple,k114s is the EXPERIMENTAL K114s (MacBook Pro 14-inch OLED, M5 Pro,
+# Mac17,13, board 0x14), tested on one machine; it needs a K114s image
+# (allowed_device_classes [k114sap]), which this repo does not build.
+BOARDS = {"apple,j714s": "j714sap", "apple,k114s": "k114sap"}
 READ_BLOCK = 8 * 1024 * 1024
 VERSION = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
 EVIDENCE = re.compile(r"^[0-9a-z.-]+$")
@@ -258,6 +263,8 @@ def place(source: Path, target: Path, link: bool) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--tree", type=Path, required=True, help="patched installer tree (with patches-j714s)")
+    parser.add_argument("--board", choices=sorted(BOARDS), default="apple,j714s",
+                        help="the one developer board this build admits (default apple,j714s)")
     parser.add_argument("--mode", choices=("offline", "online"), required=True)
     parser.add_argument("--engine", type=Path, required=True)
     parser.add_argument("--metadata", type=Path, required=True, help="the image's installer_data.json")
@@ -281,6 +288,8 @@ def main() -> None:
     key.add_argument("--generate-throwaway-key", action="store_true")
     arguments = parser.parse_args()
 
+    global BOARD, DEVICE_CLASS
+    BOARD, DEVICE_CLASS = arguments.board, BOARDS[arguments.board]
     tree = arguments.tree.resolve()
     lock = check_tree(tree)
     engine = regular(arguments.engine, "engine")

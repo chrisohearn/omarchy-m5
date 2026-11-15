@@ -4,7 +4,8 @@
 # usage: check-app.sh APP offline|online RELEASE_INPUTS
 #
 # The app must be an ad hoc signed developer build whose sealed catalog and
-# trust root are exactly the release inputs', listing only apple,j714s; an
+# trust root are exactly the release inputs', listing only apple,j714s (or the
+# one board CHECK_APP_BOARD names: apple,k114s, experimental); an
 # offline app must also carry every catalog artifact, byte for byte. Nothing
 # here installs, registers or runs anything.
 set -euo pipefail
@@ -40,11 +41,14 @@ decoder=$app/Contents/Helpers/omarchy-restore-image
 [[ $(/usr/bin/lipo -archs "$app/Contents/MacOS/OmarchyAppleInstallerApp") == arm64* ]] || fail "app is not arm64"
 
 python3 - "$release/catalog.json" "$app/Contents/Resources" "$mode" <<'PY'
-import hashlib, json, pathlib, sys
+import hashlib, json, os, pathlib, sys
 catalog, resources, mode = json.load(open(sys.argv[1])), pathlib.Path(sys.argv[2]), sys.argv[3]
 models = catalog["models"]
-if [m["deviceIdentifier"] for m in models] != ["apple,j714s"] or models[0]["status"] != "enabled":
-    raise SystemExit("check-app: the sealed catalog must enable exactly apple,j714s")
+board = os.environ.get("CHECK_APP_BOARD", "apple,j714s")
+if board not in ("apple,j714s", "apple,k114s"):
+    raise SystemExit("check-app: CHECK_APP_BOARD must be apple,j714s or apple,k114s")
+if [m["deviceIdentifier"] for m in models] != [board] or models[0]["status"] != "enabled":
+    raise SystemExit("check-app: the sealed catalog must enable exactly " + board)
 model = models[0]
 def check(path, digest, size):
     if not path.is_file() or path.stat().st_size != size:

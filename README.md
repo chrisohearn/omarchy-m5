@@ -94,6 +94,45 @@ being sent upstream, and what waits on a test first, is in [`docs/upstream.md`](
 
 ---
 
+## K114s (14-inch OLED, M5 Pro): experimental, tested on one machine
+
+The 14-inch MacBook Pro with the OLED touchscreen (Mac17,13, K114s, `apple,k114s`, board 0x14, same
+T6050 chip as the J714s) is admitted by the installer's developer build
+([`installer/patches-j714s-r2/0009`](installer/patches-j714s-r2), for
+[#10](https://github.com/betizzel/omarchy-m5/issues/10)). It was tested on one K114s, by its owner
+(chrisohearn), on Apple's 27.2 stub firmware (build 26B8125). Nobody else has run it, and the
+maintainers here have no K114s: this repo's images and releases are J714s only.
+
+- **There is no K114s image here.** The K114s engine entry accepts only an image built for the
+  `k114sap` device class with its own Stage 1 members and Stage 2; the J714s image is refused on a
+  K114s. Admission alone lets a developer build of the installer accept such an image; this repo
+  does not build one.
+- **What admission alone gives** is what this image gives on a K114s: a **keyboard-only** system.
+  Installed from an installer built with the equivalent earlier patches on release 3 (release 3's
+  image repacked with the K114s members), it booted to the Hyprland desktop on the encrypted disk and the keyboard worked
+  (owner-observed on the trial install). Without the extra pieces below there was no trackpad, no
+  Wi-Fi or Bluetooth (upstream's K114s device tree keeps the PCIe host off), no sound card, and the
+  display was the boot framebuffer only. The owner saw the missing pointer; the log lines
+  (including the `magicmouse` probe failure, listed in
+  [#10](https://github.com/betizzel/omarchy-m5/issues/10)) and the missing sound card were
+  agent-run on later boots of the same release-3 kernel.
+- **What the K114s needs on top** is in
+  [chrisohearn/omarchy-m5p-oled](https://github.com/chrisohearn/omarchy-m5p-oled): its K114s device
+  tree, the trackpad patch ([aurora-silicon/linux#1568](https://github.com/aurora-silicon/linux/pull/1568),
+  a draft written for the K114c), and the update guards that stop a package update from replacing
+  the K114s boot files. With them (its bundle r2c) the same machine also showed the trackpad
+  (owner-observed) and Wi-Fi associated and carrying traffic (agent-run; 6 GHz not tried); later,
+  with that repo's separate r3-gpu device tree, the GPU rendering the desktop (owner-observed
+  desktop; agent-run renderer `Apple M5 Pro (G17S B1)`). Bluetooth powers on (agent-run), nothing paired. Its notes list what else was and was not tried; sound, the native panel
+  mode and brightness, sleep, USB-C data and external displays are not working or not tried.
+- **How far to trust it:** one machine, one boot chain, firmware 27.2 (26B8125) only; the
+  admission patch and its tests were built against this repo's current set, but no installer or
+  image has been built from it here, and nothing was run on release 7. Treat it as a developer
+  board, not a supported one. K114s owners: please start with the notes in that repo, and report
+  results in [#10](https://github.com/betizzel/omarchy-m5/issues/10).
+
+---
+
 ## Who we collect from
 
 These are the people and repos we watch. A script ([`tools/watch/watch.sh`](tools/watch/watch.sh))
